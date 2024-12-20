@@ -1,0 +1,25 @@
+{% if page.paper-title %}
+    <h1>{{ page.paper-title }}</h1>
+{% endif %}
+
+{% if page.author %}
+    {{ page.author }}
+{% endif %}
+
+{% if page.abstract %}
+    <b><i>Abstract</i></b> <br/>
+    {{ page.abstract }}
+{% endif %}
+
+{% if page.acronym_and_abbreviation %}
+    {{ page.acronym_and_abbreviation }}
+{% endif %}
+
+{% if page.keywords %}
+    <b>Keywords</b> <br/>
+    {{ page.keywords }}
+{% endif %}
+
+{% if page.etc %}
+    {{ page.etc }}
+{% endif %}
