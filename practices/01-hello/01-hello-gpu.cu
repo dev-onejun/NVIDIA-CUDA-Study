@@ -11,9 +11,9 @@ void helloCPU()
  * to read "Hello from the GPU!"
  */
 
-void helloGPU()
+__global__ void helloGPU()
 {
-  printf("Hello also from the CPU.\n");
+  printf("Hello from the GPU.\n");
 }
 
 int main()
@@ -26,11 +26,12 @@ int main()
    * as a kernel on the GPU.
    */
 
-  helloGPU();
+  helloGPU<<<1, 1>>>();
 
   /*
    * Add code below to synchronize on the completion of the
    * `helloGPU` kernel completion before continuing the CPU
    * thread.
    */
+  cudaDeviceSynchronize();
 }
