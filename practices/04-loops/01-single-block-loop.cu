@@ -5,12 +5,9 @@
  * only do the work of 1 iteration of the original loop.
  */
 
-void loop(int N)
+__global__ void loop()
 {
-  for (int i = 0; i < N; ++i)
-  {
-    printf("This is iteration number %d\n", i);
-  }
+  printf("This is iteration number %d\n", threadIdx.x);
 }
 
 int main()
@@ -23,6 +20,6 @@ int main()
    * For this exercise, only use 1 block of threads.
    */
 
-  int N = 10;
-  loop(N);
+  loop<<<1, 10>>>();
+  cudaDeviceSynchronize();
 }
