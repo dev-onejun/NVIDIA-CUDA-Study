@@ -68,3 +68,45 @@ $\quad$ The above code demonstrates a simple example of a CPU function and a GPU
 When it comes to a line of calling function `GPUFunction<<<1, 1>>>();`, the function is called as a **kernel**. The kernel necessarily requires an **execution configuration** in the form of `<<<gridDim (the number of blocks), blockDim (the number of threads)>>>`.
 
 As the paper mentioned earlier, the kernel is executed on the GPU, meaning that it runs asynchronously, unlike most C/C++ code; thus, the rest of the code without the kernel will continue to execute without waiting for the kernel to complete. In order to synchronize this gap between the CPU and the GPU, `cudaDeviceSynchronize()` function causes the host code to wait until the device code completes, and only then resumes execution on the CPU.
+
+
+
+* The maximum number of threads per block is 1024. -> Using blocks is inevitable to handle more threads.
+    - threadIdx.x + blockIdx.x * blockDim.x = dataIndex (map each thread to a unique element in the vector)
+    - Note that although the executing sequence of the threads is guaranteed, the executing sequence of the blocks is not guaranteed.
+
+* Memory Management
+
+``` cuda
+// CPU-only
+int N = 2 << 20; // 2^21
+size_t size = N * sizeof(int);
+
+int *a;
+a = (int *)malloc(size);
+
+free(a);
+
+// GPU-accelerated
+int N = 2 << 20;
+size_t size = N * sizeof(int);
+
+int *a;
+cudaMallocManaged(&a, size);
+
+cudaFree(a);
+```
+
+    - malloc() variable is not able to use on the GPU, while cudaMallocManaged() is able to use on both the CPU and the GPU.
+
+
+
+
+
+
+
+
+
+### References
+
+$$\tag*{1}\label{[1]} \text{[1] }$$
