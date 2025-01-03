@@ -16,7 +16,7 @@ $$
 \hline
 \text{Compute Unified Device Architecture (CUDA)} & \text{Central Processing Unit (CPU)} \\
 \hline
-\text{Graphics Processing Unit (GPU)} & \text{} \\
+\text{Graphics Processing Unit (GPU)} & \text{Deep Learning Institute (DLI)} \\
 \hline
 \text{} & \text{} \\
 \hline
@@ -26,6 +26,8 @@ $$
 ---
 
 ### I. Introduction
+
+$\quad$ As a part of NVIDIA Developer Program, the NVIDIA Deep Learning Institute (DLI) [[1](#mjx-eqn-1)] offers a free course among their self-paced course] offers a free course among their self-paced course] offers a free course among their self-paced course] offers a free course among their self-paced courses.
 
 ### II. Literature Reviews
 
@@ -69,13 +71,15 @@ When it comes to a line of calling function `GPUFunction<<<1, 1>>>();`, the func
 
 As the paper mentioned earlier, the kernel is executed on the GPU, meaning that it runs asynchronously, unlike most C/C++ code; thus, the rest of the code without the kernel will continue to execute without waiting for the kernel to complete. In order to synchronize this gap between the CPU and the GPU, `cudaDeviceSynchronize()` function causes the host code to wait until the device code completes, and only then resumes execution on the CPU.
 
+**Parallel Programming Configuration** \
+$\quad$ Parallel computing is a type of computation in which many calculations or processes are carried out simultaneously. Each data element is processed by each thread. However, the maximum number of threads per block that CUDA defines is so finite, 1024, that it is inevitable to use blocks to concurrently handle more threads. An **dataIndex** represents the index of the thread corresponding to the index of the data element in a grid. Calculated by $\text{threadIdx.x} + \text{blockIdx.x} \times \text{blockDim.x}$, the `dataIndex` enables to access all threads in the grid called by a single kernel.
 
+Three possible cases are prompted regarding the relationship between the number of threads $T$ and the number of data elements $N$; **1. $\mathbf{T \eq N}$** Nothing needs to be considered in this case. **2. \mathbf{T \gt N}$** This makes empty threads, which are not used, so that handling the case as checking whether `dataIndex` is smaller than $N$ is necessary. **3. \mathbf{T \lt N}$** This case requires a **grid-stride loop** technique. The technique allows a single thread to stride forward sequentially among the data elements by the number of threads in the grid with $\text{blockDim.x} \times \text{gridDim.x}$. The `dataIndex` in this technique is consequently calculated by $(\text{threadIdx.x} + (\text{blockIdx.x} \times \text{blockDim.x}) + (\text{blockDim.x} \times \text{gridDim.x}) \times i)$ where $i$ is the iteration index.
 
-* The maximum number of threads per block is 1024. -> Using blocks is inevitable to handle more threads.
-    - threadIdx.x + blockIdx.x * blockDim.x = dataIndex (map each thread to a unique element in the vector)
-    - Note that although the executing sequence of the threads is guaranteed, the executing sequence of the blocks is not guaranteed.
+Note that the executing sequence of the threads is guaranteed, but the executing sequence of the blocks is not guaranteed.
 
-* Memory Management
+**Memory Management** \
+$\quad$ The following code shows how to allocate and free memory on the GPU.
 
 ``` cuda
 // CPU-only
@@ -97,10 +101,10 @@ cudaMallocManaged(&a, size);
 cudaFree(a);
 ```
 
-    - malloc() variable is not able to use on the GPU, while cudaMallocManaged() is able to use on both the CPU and the GPU.
+Note that a memory address assigned by `malloc()` is not able to access on the GPU, while a memory address assigned by `cudaMallocManaged()` is able to access on both the CPU and the GPU.
 
-
-
+**a** \
+$\quad$
 
 
 
@@ -109,4 +113,4 @@ cudaFree(a);
 
 ### References
 
-$$\tag*{1}\label{[1]} \text{[1] }$$
+$$\tag*{}\label{1} \text{[1] NVIDIA Deep Learning Institute, https://learn.nvidia.com/en-us/training/self-paced-courses, accessed in Jan. 3rd, 2025}$$
