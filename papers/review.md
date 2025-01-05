@@ -46,18 +46,15 @@ Handling asynchronous tasks is an important and challenging. CUDA addresses this
 **Hello Worlds**
 
 ``` cuda
-void CPUFunction()
-{
+void CPUFunction() {
     printf("This function is defined to run on the CPU.\n");
 }
 
-__global__ void GPUFunction()
-{
+__global__ void GPUFunction() {
     printf("This function is defined to run on the GPU.\n");
 }
 
-int main()
-{
+int main() {
     CPUFunction();
 
     GPUFunction<<<1, 1>>>();
@@ -72,9 +69,43 @@ When it comes to a line of calling function `GPUFunction<<<1, 1>>>();`, the func
 As the paper mentioned earlier, the kernel is executed on the GPU, meaning that it runs asynchronously, unlike most C/C++ code; thus, the rest of the code without the kernel will continue to execute without waiting for the kernel to complete. In order to synchronize this gap between the CPU and the GPU, `cudaDeviceSynchronize()` function causes the host code to wait until the device code completes, and only then resumes execution on the CPU.
 
 **Parallel Programming Configuration** \
-$\quad$ Parallel computing is a type of computation in which many calculations or processes are carried out simultaneously. Each data element is processed by each thread. However, the maximum number of threads per block that CUDA defines is so finite, 1024, that it is inevitable to use blocks to concurrently handle more threads. An **dataIndex** represents the index of the thread corresponding to the index of the data element in a grid. Calculated by $\text{threadIdx.x} + \text{blockIdx.x} \times \text{blockDim.x}$, the `dataIndex` enables to access all threads in the grid called by a single kernel.
+$\quad$ Parallel computing is a type of computation in which many calculations or processes are carried out simultaneously. Each data element is processed by each thread. However, the maximum number of threads per block that CUDA defines is so finite, 1024, that it is inevitable to use blocks to concurrently handle more threads. Furthermore, traits of GPU hardware often make the desirable number of threads per block to be a multiple of 32 due to getting the performance benefits.
 
-Three possible cases are prompted regarding the relationship between the number of threads $T$ and the number of data elements $N$; **1. $\mathbf{T = N}$** Nothing needs to be considered in this case. **2. $\mathbf{T \gt N}$** This makes empty threads, which are not used, so that handling the case as checking whether `dataIndex` is smaller than $N$ is necessary. **3. $\mathbf{T \lt N}$** This case requires a **grid-stride loop** technique. The technique allows a single thread to stride forward sequentially among the data elements by the number of threads in the grid with $\text{blockDim.x} \times \text{gridDim.x}$. The `dataIndex` in this technique is consequently calculated by $\text{threadIdx.x} + (\text{blockIdx.x} \times \text{blockDim.x}) + (\text{blockDim.x} \times \text{gridDim.x}) \times i$ where $i$ is the iteration index.
+An **dataIndex** represents the index of the thread corresponding to the index of the data element in a grid. Calculated by $\text{threadIdx.x} + \text{blockIdx.x} \times \text{blockDim.x}$, the `dataIndex` enables to access all threads in the grid called by a single kernel.
+
+Three possible cases are prompted by the hardware requirements regarding the relationship between the number of threads $T$ and the number of data elements $N$; **1. $\mathbf{T = N}$** Nothing needs to be considered in this case. **2. $\mathbf{T \gt N}$** This makes empty threads, which are not used, so that handling the case as checking whether `dataIndex` is smaller than $N$ is necessary.
+
+**3. $\mathbf{T \lt N}$** This case requires a **grid-stride loop** technique. The technique allows a single thread to stride forward sequentially among the data elements by the number of threads in the grid with $\text{blockDim.x} \times \text{gridDim.x}$. The `dataIndex` in this technique is consequently calculated by $\text{threadIdx.x} + (\text{blockIdx.x} \times \text{blockDim.x}) + (\text{blockDim.x} \times \text{gridDim.x}) \times i$ where $i$ is the iteration index. The following code block shows the implementation of the grid-stride loop technique.
+
+``` cuda
+__global__ void kernel(int *a, int N) {
+    int indexWithinTheGrid = threadIdx.x + blockIdx.x * blockDim.x;
+    int gridStride = blockDim.x * gridDim.x;
+
+    for (int i = indexWithinTheGrid; i < N; i += gridStride) {
+        // do work on a[i];
+    }
+}
+```
+
+$\quad$ When both the number of threads and the number of data elements were known while the number of blocks was not, the following code ensures that the extra block is created to handle all data elements.
+
+``` cuda
+int N = 100000;
+size_t threads_per_block = 256;
+
+// calculate the number of blocks from given variables
+size_t number_of_blocks = (N + threads_per_block - 1) / threads_per_block;
+
+some_kernel<<<number_of_blocks, threads_per_block>>>(N);
+
+__global__ void some_kernel(int N) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx < N) {
+        // do something
+    }
+}
+```
 
 Note that the executing sequence of the threads is guaranteed, but the executing sequence of the blocks is not guaranteed.
 
