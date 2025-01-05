@@ -1,5 +1,7 @@
 # NVIDIA CUDA Study
 
+https://learn.nvidia.com/en-us/training/self-paced-courses
+
 ## Compile and Run CUDA Programs
 
 ``` bash
