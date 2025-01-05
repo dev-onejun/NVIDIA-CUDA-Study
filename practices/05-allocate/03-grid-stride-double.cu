@@ -16,12 +16,11 @@ void init(int *a, int N)
  */
 
 __global__
-void doubleElements(int *a, int N)
-{
-  int i;
-  i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i < N)
-  {
+void doubleElements(int *a, int N) {
+  int indexWithinTheGrid = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = gridDim.x * blockDim.x;
+
+  for (int i = indexWithinTheGrid; i < N; i += stride) {
     a[i] *= 2;
   }
 }
