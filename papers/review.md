@@ -3,6 +3,13 @@ two-columns: true
 paper-title: "What Makes NVIDIA the Strongest: A Review of CUDA"
 author: '
 $$
+\begin{array}{c}
+\hline
+\\
+\text{A CUDA Overview: Basics for NVIDIA GPU-accelerated Programming} \\
+\\
+\hline
+\end{array}
 \mathbf{\text{Wonjun Park}} \\
 \text{Computer Science} \\
 \text{University of Texas at Arlington} \\
@@ -27,7 +34,7 @@ $$
 
 ### I. Introduction
 
-$\quad$ As a part of NVIDIA Developer Program, the NVIDIA Deep Learning Institute (DLI) [[1](#mjx-eqn-1)] offers a free course among their self-paced course.
+$\quad$ As a part of NVIDIA Developer Program, the NVIDIA Deep Learning Institute (DLI) [[1](#mjx-eqn-1)] offered a free course among their self-paced course.
 
 ### II. Literature Reviews
 
@@ -43,7 +50,9 @@ $\quad$ In CPU-only applications, data is sequentially processed by the CPU. Thi
 
 Handling asynchronous tasks is an important and challenging. CUDA addresses this issue by `cudaDeviceSynchronize()` function which waits for all tasks on the GPU to complete before continuing. After synchronization, data which will be accessed by the CPU is also automatically migrated back to the CPU. With these concepts, GPU process multiple tasks simultaneously, which allows faster processing times.
 
-**Hello Worlds**
+#### B. Hello Worlds
+
+**Hello World in CUDA**
 
 ``` cuda
 void CPUFunction() {
@@ -134,8 +143,64 @@ cudaFree(a);
 
 Note that a memory address assigned by `malloc()` is not able to access on the GPU, while a memory address assigned by `cudaMallocManaged()` is able to access on both the CPU and the GPU.
 
-**a** \
-$\quad$
+**Error Handling** \
+$\quad$ Error handling is crucial in all programming languages. All errors are typed by `cudaError_t`. Three types of principal errors is addressed in this paper; **1. From Memory Allocation** Due to hardware limitations, memory allocation often fail. A CUDA library function, `cudaMallocManaged()`, returns a `cudaError_t` type, which can be used to check whether the memory allocation was successful. The following code snippet shows how to handle memory allocation errors.
+
+``` cuda
+cudaError_t err;
+err = cudaMallocManaged(&a, size);  // Assume the existence of `a` and `N`
+
+if (err != cudaSuccess) {
+    printf("Error: %s\n", cudaGetErrorString(err)); // `cudaGetErrorString()` is provided by CUDA.
+}
+```
+
+**2. During Launching a Kernel** As mentioned above, the kernel should be defined by void return type which prohibits from handling errors in the kernel. In order to unfold this issue, CUDA gives a function `cudaGetLastError()` which returns the last error as a type of `cudaError_t`. An error evoked by the kernel launching is examined by the following example.
+
+``` cuda
+someKernel<<<1, -1>>>();  // the parameters of kernels cannot be negatibve
+
+cudaError_t err;
+err = cudaGetLastError();
+
+if (err != cudaSuccess) {
+    printf("Error: %s\n", cudaGetErrorString(err));
+}
+```
+
+**3. During Executing a Kernel** The previous two cases account for the errors in synchronous code flow. However, it is not underestimated that the asynchronous execution in GPUs is mainly a regard of parallel programming. The `cudaDeviceSynchronize()` function returns an error which emerges during the execution of the kernel.
+
+``` cuda
+cudaError_t err;
+err = cudaDeviceSynchronize();
+
+if (err != cudaSuccess) {
+    printf("Error: %s\n", cudaGetErrorString(err));
+}
+```
+
+These errors can be wrapped up by a macro function like the following example.
+
+``` cuda
+#include <stdio.h>
+#include <assert.h>
+
+inline cudaError_t checkCuda(cudaError_t result) {
+    if (result != cudaSuccess) {
+        fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+        assert(result == cudaSuccess);
+    }
+    return result;
+}
+
+int main() {
+    /*
+     * The macro above can be wrapped around any function
+     * that returns a value of type `cudaError_t`.
+     */
+    checkCuda(cudaMallocManaged(&a, size));
+}
+```
 
 
 
@@ -143,5 +208,7 @@ $\quad$
 
 
 ### References
+
+Most code snippets are provided by the course material.
 
 $$\tag*{}\label{1} \text{[1] NVIDIA Deep Learning Institute, https://learn.nvidia.com/en-us/training/self-paced-courses, accessed in Jan. 3rd, 2025}$$
