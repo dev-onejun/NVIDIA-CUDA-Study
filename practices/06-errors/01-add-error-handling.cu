@@ -1,4 +1,15 @@
 #include <stdio.h>
+#include <assert.h>
+
+inline cudaError_t checkCuda(cudaError_t result)
+{
+  if (result != cudaSuccess)
+  {
+    fprintf(stderr, "CUDA Runtime Error: \n%s\n", cudaGetErrorString(result));
+    assert(result == cudaSuccess);
+  }
+  return result;
+}
 
 void init(int *a, int N)
 {
@@ -12,7 +23,6 @@ void init(int *a, int N)
 __global__
 void doubleElements(int *a, int N)
 {
-
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = gridDim.x * blockDim.x;
 
@@ -42,17 +52,31 @@ int main()
 
   int N = 10000;
   int *a;
+  cudaError_t err;
 
   size_t size = N * sizeof(int);
-  cudaMallocManaged(&a, size);
+  err = cudaMallocManaged(&a, size);
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Failed to allocate device memory: \n%s\n", cudaGetErrorString(err));
+    return 1;
+  }
 
   init(a, N);
 
-  size_t threads_per_block = 2048;
+  size_t threads_per_block = 2048; // the maximum number of threads per block is 1024
   size_t number_of_blocks = 32;
 
   doubleElements<<<number_of_blocks, threads_per_block>>>(a, N);
-  cudaDeviceSynchronize();
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Failed to launch kernel: \n%s\n", cudaGetErrorString(err));
+    return 1;
+  }
+
+  checkCuda(cudaDeviceSynchronize());
 
   bool areDoubled = checkElementsAreDoubled(a, N);
   printf("All elements were doubled? %s\n", areDoubled ? "TRUE" : "FALSE");
