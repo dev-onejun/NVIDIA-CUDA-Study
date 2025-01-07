@@ -9,7 +9,7 @@ $$
 \text{A CUDA Overview: Basics for NVIDIA GPU-accelerated Programming} \\
 \\
 \hline
-\end{array}
+\end{array} \\
 \mathbf{\text{Wonjun Park}} \\
 \text{Computer Science} \\
 \text{University of Texas at Arlington} \\
@@ -211,4 +211,6 @@ int main() {
 
 Most code snippets are provided by the course material.
 
-$$\tag*{}\label{1} \text{[1] NVIDIA Deep Learning Institute, https://learn.nvidia.com/en-us/training/self-paced-courses, accessed in Jan. 3rd, 2025}$$
+$$
+\tag*{}\label{1} \text{[1] NVIDIA Deep Learning Institute, https://learn.nvidia.com/en-us/training/self-paced-courses, accessed in Jan. 3rd, 2025}
+$$
