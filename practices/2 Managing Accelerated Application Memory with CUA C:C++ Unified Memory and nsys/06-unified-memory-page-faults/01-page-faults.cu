@@ -39,5 +39,24 @@ int main()
    * experiment, and then verify by running `nsys`.
    */
 
+  // Hypothesis 1
+  deviceKernel<<<4, 32>>>(a, N);
+  cudaDeviceSynchronize();
+
+  // Hypothesis 2
+  hostFunction(a, N);
+
+  // Hypothesis 3
+  deviceKernel<<<4, 32>>>(a, N);
+  cudaDeviceSynchronize();
+
+  hostFunction(a, N);
+
+  // Hypothesis 4
+  hostFunction(a, N);
+
+  deviceKernel<<<4, 32>>>(a, N);
+  cudaDeviceSynchronize();
+
   cudaFree(a);
 }
